@@ -166,16 +166,37 @@
 
         async function updateUserStatus() {
             if (puter.auth.isSignedIn()) {
-                const user = await puter.auth.getUser();
-                userInfo.textContent = `Logged in: ${user.username}`;
-                loginBtn.textContent = 'Logout';
-                promptInput.disabled = false;
-                promptInput.placeholder = 'Ask anything...';
-                imagePromptInput.disabled = false;
-                imageGenerateBtn.disabled = false;
-                imagePromptInput.placeholder = 'A photo of a cat astronaut on Mars...';
-                const emptyState = document.getElementById('empty-state');
-                if (emptyState) emptyState.remove();
+                try {
+                    const user = await puter.auth.getUser();
+                    userInfo.textContent = `Logged in: ${user.username}`;
+                    loginBtn.textContent = 'Logout';
+                    promptInput.disabled = false;
+                    promptInput.placeholder = 'Ask anything...';
+                    imagePromptInput.disabled = false;
+                    imageGenerateBtn.disabled = false;
+                    imagePromptInput.placeholder = 'A photo of a cat astronaut on Mars...';
+
+                    const emptyState = document.getElementById('empty-state');
+                    if (emptyState) emptyState.remove();
+
+                } catch (error) {
+                    console.error("Error getting user info (likely auth issue):", error);
+                    // Fallback to logged-out state
+                    userInfo.textContent = 'Not Logged In (Error)'; // Indicate error for clarity
+                    loginBtn.textContent = 'Login';
+                    promptInput.disabled = true;
+                    promptInput.placeholder = 'Please log in to start chatting...';
+                    imagePromptInput.disabled = true;
+                    imageGenerateBtn.disabled = true;
+                    imagePromptInput.placeholder = 'Please log in to generate images...';
+                    initializeChat();
+
+                    // Optionally, attempt a silent logout if getUser fails,
+                    // as the session might be invalid.
+                    // However, this might trigger popups if not careful.
+                    // For now, just updating UI is safer.
+                    // await puter.auth.logout(); // Example: Could be added if desired
+                }
             } else {
                 userInfo.textContent = 'Not Logged In';
                 loginBtn.textContent = 'Login';
