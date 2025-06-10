@@ -251,11 +251,30 @@
         // --- Event Listeners ---
         loginBtn.addEventListener('click', async () => {
             if (puter.auth.isSignedIn()) {
-                await puter.auth.logout();
+                if (typeof puter.auth.logout === 'function') {
+                    try {
+                        await puter.auth.logout();
+                    } catch (logoutError) {
+                        console.error("Error during puter.auth.logout():", logoutError);
+                        // Optionally, inform the user that logout might have failed
+                        // userInfo.textContent = "Logout failed; please try again.";
+                    }
+                } else {
+                    console.error("puter.auth.logout is not a function. Logout cannot be performed by the app.");
+                    // Optionally, inform the user
+                    // userInfo.textContent = "Logout function unavailable in app.";
+                }
             } else {
-                await puter.auth.signIn();
+                try {
+                    await puter.auth.signIn();
+                } catch (signInError) {
+                    console.error("Error during puter.auth.signIn():", signInError);
+                    // Optionally, inform the user that sign-in failed
+                }
             }
-            updateUserStatus();
+            // Always update status, which will reflect the actual auth state
+            // or the error state if auth operations failed internally.
+            await updateUserStatus();
         });
 
         toolTabs.forEach(tab => {
