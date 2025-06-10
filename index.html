@@ -692,25 +692,37 @@
 
         async function handleImagePrompt() {
             try {
-                if(!puter.auth.isSignedIn()){
+                if (!puter.auth.isSignedIn()) {
                     await puter.auth.signIn();
                     await updateUserStatus();
-                    if(!puter.auth.isSignedIn()) return; // If user cancelled login
+                    if (!puter.auth.isSignedIn()) return;
                 }
-                const imagePrompt = imagePromptInput.value;
+
+                const imagePrompt = imagePromptInput.value.trim();
                 if (!imagePrompt) return;
-                const loadingDiv = document.createElement('div'); 
+
+                const loadingDiv = document.createElement('div');
                 loadingDiv.className = 'loading-indicator';
+                // Standard loading message, not the investigative one
                 loadingDiv.textContent = `Generating "${imagePrompt}"...`; 
                 imageDisplayArea.prepend(loadingDiv);
                 imagePromptInput.value = '';
-                const imageElement = await puter.ai.txt2img(imagePrompt);
-                imageElement.className = 'generated-image'; 
-                loadingDiv.replaceWith(imageElement);
-            } catch (error) {
-                console.error("Image Generation API Error:", error); // More specific console log
 
-                // Ensure any existing loading indicator is removed first.
+                // Call txt2img WITHOUT the stream option
+                const imageElement = await puter.ai.txt2img(imagePrompt);
+
+                // Standard handling of the returned image element
+                if (imageElement && imageElement instanceof HTMLImageElement) {
+                    imageElement.className = 'generated-image';
+                    loadingDiv.replaceWith(imageElement);
+                } else {
+                    console.error("Puter.ai.txt2img did not return a valid image element:", imageElement);
+                    loadingDiv.textContent = "Failed to display image. Invalid response from AI.";
+                    // Optionally, remove loadingDiv after a delay or leave the message.
+                }
+
+            } catch (error) {
+                console.error("Image Generation API Error:", error);
                 const existingLoadingDiv = document.querySelector('.loading-indicator');
                 if (existingLoadingDiv) {
                     existingLoadingDiv.remove();
