@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>My AI Workbench</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
@@ -133,7 +134,7 @@
                 for await (const part of responseStream) {
                     const chunk = part?.text || ''; 
                     fullResponse += chunk;
-                    contentContainer.innerHTML = marked.parse(fullResponse);
+                    contentContainer.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
                 }
             } catch (error) {
                 console.error("API Error:", error);
@@ -148,6 +149,9 @@
                 loginBtn.textContent = 'Logout';
                 promptInput.disabled = false;
                 promptInput.placeholder = 'Ask anything...';
+                imagePromptInput.disabled = false;
+                imageGenerateBtn.disabled = false;
+                imagePromptInput.placeholder = 'A photo of a cat astronaut on Mars...';
                 const emptyState = document.getElementById('empty-state');
                 if (emptyState) emptyState.remove();
             } else {
@@ -155,6 +159,9 @@
                 loginBtn.textContent = 'Login';
                 promptInput.disabled = true;
                 promptInput.placeholder = 'Please log in to start chatting...';
+                imagePromptInput.disabled = true;
+                imageGenerateBtn.disabled = true;
+                imagePromptInput.placeholder = 'Please log in to generate images...';
                 initializeChat();
             }
         }
@@ -178,8 +185,20 @@
                 loadingDiv.replaceWith(imageElement);
             } catch (error) {
                 console.error("Image Gen Error:", error);
-                const loadingDiv = document.querySelector('.loading-indicator');
-                if(loadingDiv) loadingDiv.textContent = `Error generating image: ${error.message}`;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'image-error-message'; // Add a class for potential styling
+                errorDiv.style.color = 'red'; // Basic styling for visibility
+                errorDiv.style.width = '100%'; // Ensure it takes full width
+                errorDiv.style.textAlign = 'center'; // Center the text
+                errorDiv.style.padding = '10px'; // Add some padding
+                errorDiv.textContent = `Error generating image: ${error.message}`;
+                imageDisplayArea.prepend(errorDiv);
+
+                // Also, ensure any existing loading indicator is removed if an error occurs.
+                const existingLoadingDiv = document.querySelector('.loading-indicator');
+                if (existingLoadingDiv) {
+                    existingLoadingDiv.remove();
+                }
             }
         }
 
