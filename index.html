@@ -107,7 +107,6 @@
 
         #login-btn:hover {
             background: var(--accent-gradient-hover);
-            /* filter: brightness(1.2); Alternative hover effect */
         }
 
         #login-btn:active {
@@ -146,7 +145,7 @@
         }
 
         .tool-tab:not(.active):hover {
-            background-color: var(--content-bg-glass-alt);
+            background-color: var(--content-bg-glass-alt); /* Use a subtle glass effect on hover */
             color: var(--text-primary);
         }
 
@@ -242,7 +241,6 @@
         #submitBtn svg {
             width: 20px;
             height: 20px;
-            /* margin-left: 2px; /* Removed if perfectly centered */
         }
 
         #submitBtn.active {
@@ -306,7 +304,6 @@
             color: var(--text-primary);
             outline: none;
             font-family: var(--font-primary); /* Ensure font consistency */
-            /* border-radius: 24px 0 0 24px; /* Old: remove, parent handles rounding */
         }
 
         #image-prompt::placeholder {
@@ -322,7 +319,6 @@
             background: var(--accent-gradient);
             color: var(--text-on-accent);
             font-weight: bold;
-            /* border-radius: 0 24px 24px 0; /* Old: remove, parent handles rounding */
             cursor: pointer;
             transition: background 0.3s ease, transform 0.1s ease;
         }
@@ -377,6 +373,160 @@
             outline-offset: 2px;
             box-shadow: 0 0 0 3px rgba(var(--accent-grad-start-rgb), 0.3);
         }
+
+@media (max-width: 820px) {
+    #chat-log,
+    #prompt-area,
+    #image-display-area { /* Added image-display-area here */
+        padding: 15px;
+    }
+
+    header {
+        padding: 10px 15px;
+    }
+
+    .message-bubble {
+        max-width: 90%;
+    }
+
+    #prompt-container {
+        margin-left: 10px; /* Added margin */
+        margin-right: 10px; /* Added margin */
+    }
+}
+
+@media (max-width: 600px) {
+    header {
+        padding: 10px;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 10px;
+    }
+
+    #user-info {
+        text-align: center;
+        width: 100%; /* Allow it to take full width if it's on its own line */
+        margin-bottom: 5px; /* Add some space if tool-switcher wraps below */
+    }
+
+    #chat-log,
+    #prompt-area,
+    #image-display-area { /* Added image-display-area here */
+        padding: 10px;
+    }
+
+    .message-bubble {
+        padding: 8px 12px;
+        max-width: 92%;
+    }
+
+    .message-bubble .message-content p,
+    .message-bubble .message-content li,
+    .message-bubble .message-content div { /* General text containers */
+        font-size: 15px !important;
+        line-height: 1.5 !important;
+    }
+     .message-bubble .message-content pre { /* Code blocks */
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+    }
+    .message-bubble .message-content h1, .message-bubble .message-content h2, .message-bubble .message-content h3, .message-bubble .message-content h4, .message-bubble .message-content h5, .message-bubble .message-content h6 {
+        font-size: 1.1em !important; /* Relative to the 15px */
+        margin-top: 0.5em !important;
+        margin-bottom: 0.3em !important;
+    }
+
+    .tool-tab {
+        padding: 8px 10px; /* Adjusted padding */
+        font-size: 13px;
+    }
+
+    #model-selector {
+        padding: 7px 10px;
+        font-size: 13px;
+    }
+    #chat-tool > div:first-child { /* Parent of model selector */
+        padding: 8px;
+    }
+
+    #prompt-container {
+        padding: 8px;
+        gap: 8px;
+        margin-left: 5px; /* Further reduce margin */
+        margin-right: 5px; /* Further reduce margin */
+    }
+
+    #prompt,
+    #image-prompt {
+        font-size: 15px;
+    }
+
+    #image-prompt {
+        padding: 12px;
+    }
+    #image-generate-btn {
+        padding: 10px 14px; /* Adjusted padding */
+        font-size: 14px; /* Adjusted font size */
+    }
+
+    #submitBtn {
+        width: 34px;
+        height: 34px;
+    }
+    #submitBtn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 400px) {
+    header {
+        gap: 8px;
+        justify-content: center; /* Center items if they are all wrapping */
+    }
+    #tool-switcher, #login-btn {
+         flex-grow: 1; /* Allow them to grow to fill space if wrapped */
+         min-width: 120px; /* Ensure they are tappable */
+         text-align: center; /* Center text in button/tabs */
+    }
+     #tool-switcher {
+        justify-content: center; /* Center tabs inside */
+    }
+
+    .tool-tab {
+        padding: 7px 8px; /* Adjusted padding */
+        font-size: 12px;
+    }
+    #login-btn {
+        padding: 7px 10px; /* Adjusted padding */
+        font-size: 12px; /* Adjusted font size */
+    }
+
+    .message-bubble .message-content p,
+    .message-bubble .message-content li,
+    .message-bubble .message-content div {
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+    }
+    .message-bubble .message-content pre {
+        font-size: 13px !important;
+        line-height: 1.3 !important;
+    }
+}
+
+/* --- Adjustments for Ultrawide Displays --- */
+
+@media (min-width: 1600px) {
+    #app-container {
+        max-width: 1100px;
+    }
+}
+
+@media (min-width: 2500px) {
+    #app-container {
+        max-width: 1400px;
+    }
+}
     </style>
 </head>
 <body>
