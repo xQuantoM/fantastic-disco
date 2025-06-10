@@ -101,6 +101,18 @@
         // --- Functions ---
         function initializeChat() { chatLog.innerHTML = emptyStateHTML; }
 
+        function formatUserFriendlyErrorMessage(error, contextType) {
+            let defaultMessage = `An unexpected error occurred during ${contextType}.`;
+            if (error && error.message) {
+                // Basic check for network-like errors, could be expanded
+                if (error.message.toLowerCase().includes('networkerror') || error.message.toLowerCase().includes('failed to fetch')) {
+                    return `Sorry, a network issue occurred with the ${contextType}. Please check your connection and try again.`;
+                }
+                return `Sorry, there was an issue with the ${contextType}: ${error.message}`;
+            }
+            return defaultMessage;
+        }
+
         function addBubble(text, type) {
             const bubble = document.createElement('div');
             bubble.className = `message-bubble ${type}-bubble`;
@@ -137,8 +149,18 @@
                     contentContainer.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
                 }
             } catch (error) {
-                console.error("API Error:", error);
-                contentContainer.textContent = `API Error: ${error.message}`;
+                console.error("Chat API Error:", error); // More specific console log
+                const errorMessage = formatUserFriendlyErrorMessage(error, "chat request");
+
+                // Ensure contentContainer is the actual div for the AI's message content
+                // The variable 'contentContainer' was defined as: const contentContainer = aiBubble.querySelector('.message-content');
+                // So, this should correctly target the content part of the bubble.
+                if (contentContainer) {
+                    contentContainer.innerHTML = DOMPurify.sanitize(marked.parse(errorMessage)); // Reuse sanitization and markdown parsing for consistency
+                } else {
+                    // Fallback if contentContainer is somehow not found (should not happen with current code)
+                    addBubble(errorMessage, 'ai');
+                }
             }
         }
 
@@ -184,21 +206,24 @@
                 imageElement.className = 'generated-image'; 
                 loadingDiv.replaceWith(imageElement);
             } catch (error) {
-                console.error("Image Gen Error:", error);
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'image-error-message'; // Add a class for potential styling
-                errorDiv.style.color = 'red'; // Basic styling for visibility
-                errorDiv.style.width = '100%'; // Ensure it takes full width
-                errorDiv.style.textAlign = 'center'; // Center the text
-                errorDiv.style.padding = '10px'; // Add some padding
-                errorDiv.textContent = `Error generating image: ${error.message}`;
-                imageDisplayArea.prepend(errorDiv);
+                console.error("Image Generation API Error:", error); // More specific console log
 
-                // Also, ensure any existing loading indicator is removed if an error occurs.
+                // Ensure any existing loading indicator is removed first.
                 const existingLoadingDiv = document.querySelector('.loading-indicator');
                 if (existingLoadingDiv) {
                     existingLoadingDiv.remove();
                 }
+
+                const userFriendlyErrorMessage = formatUserFriendlyErrorMessage(error, "image generation");
+
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'image-error-message';
+                errorDiv.style.color = 'red';
+                errorDiv.style.width = '100%';
+                errorDiv.style.textAlign = 'center';
+                errorDiv.style.padding = '10px';
+                errorDiv.textContent = userFriendlyErrorMessage; // Use the refined message
+                imageDisplayArea.prepend(errorDiv);
             }
         }
 
