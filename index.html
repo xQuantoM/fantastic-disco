@@ -192,16 +192,62 @@
         }
 
         /* Ensure prompt input container and input itself are visible on new bg */
-        #prompt-container {
+        #prompt-container { /* Modify existing */
             display: flex;
-            align-items: flex-end; /* Keeps button aligned with bottom of textarea as it grows */
-            background-color: var(--content-bg-glass-alt); /* New glass background */
+            /* align-items: flex-end; /* Keep this if button is next to textarea */
+            flex-direction: column; /* To stack URL input, then textarea+sendbutton row */
+            background-color: var(--content-bg-glass-alt);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--border-radius-standard); /* Updated for consistency */
-            padding: 10px; /* Existing padding */
-            gap: 10px; /* Existing gap */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Lift effect */
-            margin: 5px 0; /* Add a little margin if #prompt-area padding isn't enough */
+            border-radius: var(--border-radius-standard);
+            padding: 10px;
+            /* gap: 10px; /* Will be handled by margins or new flex structure */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin: 5px; /* Adjusted from 5px 0 */
+        }
+
+        /* Create a new row for textarea and buttons */
+        #main-prompt-line {
+            display: flex;
+            align-items: flex-end; /* Align textarea and send button */
+            width: 100%;
+            gap: 10px; /* Gap between textarea and send button */
+        }
+
+        #toggle-image-url-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px; /* Make it compact */
+            margin-bottom: 5px; /* Space from the URL input if that's above */
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; /* For centering icon */
+            align-items: center;
+            justify-content: center;
+            align-self: flex-start; /* Align to the start of the column prompt-container */
+        }
+
+        #toggle-image-url-btn:hover {
+            color: var(--text-primary);
+            background-color: var(--content-bg-glass); /* Subtle hover */
+        }
+
+        #toggle-image-url-btn.active { /* Style when URL input is visible */
+            color: var(--accent-grad-start);
+        }
+
+        #image-url-prompt { /* Style for when it's visible */
+            /* display: none; /* This is handled by JS, remove from base style here */
+            width: calc(100% - 18px); /* Full width minus padding from #prompt-container (10px each side approx) */
+            margin-bottom: 8px;
+            padding: 10px; /* Increased padding */
+            border-radius: var(--border-radius-standard);
+            border: 1px solid var(--border-subtle);
+            background-color: var(--content-bg-glass); /* Similar to other inputs */
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+            font-size: 14px;
+            box-sizing: border-box; /* Ensure padding doesn't expand it beyond 100% */
         }
 
         #prompt {
@@ -555,10 +601,18 @@
         </div>
         <div id="prompt-area">
             <div id="prompt-container">
-                <textarea id="prompt" placeholder="Please log in to start chatting..." rows="1" disabled></textarea>
-                <button id="submitBtn">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                <button id="toggle-image-url-btn" title="Attach Image URL">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M21.9998 13.5V10.5H17.4998C16.9998 8.089 15.4098 6.5 12.9998 6.5C12.5978 6.50311 12.1998 6.55623 11.8118 6.65723L13.2218 5.24723L11.1008 3.12623L6.00078 8.22623L8.12178 10.3472L9.51378 8.95523C9.55538 8.96905 9.59768 8.98358 9.64078 8.99823C9.60978 9.37023 9.52978 9.73723 9.39978 10.0892L9.39978 10.5H2.99978V13.5H9.39978V13.909C9.52978 14.262 9.60978 14.629 9.64078 15.001H9.51378L8.12178 13.653L6.00078 15.774L11.1008 20.874L13.2218 18.753L11.8118 17.343C12.1998 17.444 12.5978 17.4969 12.9998 17.5C15.4098 17.5 16.9998 15.911 17.4998 13.5H21.9998ZM12.9998 14.5C11.9998 14.5 11.4998 13.75 11.4998 12C11.4998 10.25 11.9998 9.5 12.9998 9.5C13.9998 9.5 14.4998 10.25 14.4998 12C14.4998 13.75 13.9998 14.5 12.9998 14.5Z"></path>
+                    </svg>
                 </button>
+                <input type="text" id="image-url-prompt" placeholder="Image URL (optional)" style="display: none;">
+                <div id="main-prompt-line">
+                    <textarea id="prompt" placeholder="Please log in to start chatting..." rows="1" disabled></textarea>
+                    <button id="submitBtn">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -576,6 +630,8 @@
         const imageGenerateBtn = document.getElementById('image-generate-btn');
         const imagePromptInput = document.getElementById('image-prompt');
         const imageDisplayArea = document.getElementById('image-display-area');
+        const toggleImageUrlBtn = document.getElementById('toggle-image-url-btn');
+        const imageUrlPrompt = document.getElementById('image-url-prompt');
         
         const emptyStateHTML = `<div id="empty-state" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h2 style="color: #888; font-size: 24px; font-weight: 500;">Please log in to begin.</h2></div>`;
 
@@ -594,56 +650,116 @@
             return defaultMessage;
         }
 
-        function addBubble(text, type) {
-            const bubble = document.createElement('div');
-            bubble.className = `message-bubble ${type}-bubble`;
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = text;
-            bubble.appendChild(contentDiv);
-            chatLog.appendChild(bubble);
-            chatLog.scrollTop = chatLog.scrollHeight;
-            return bubble;
+function addBubble(text, type, imageUrlForDisplay = null) { // Added imageUrlForDisplay
+    const bubble = document.createElement('div');
+    bubble.className = `message-bubble ${type}-bubble`;
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+
+    if (type === 'user' && imageUrlForDisplay) {
+        const imgElement = document.createElement('img');
+        imgElement.src = imageUrlForDisplay;
+        // Styling for the preview image in the bubble
+        imgElement.style.maxWidth = '100%'; // Responsive within the bubble
+        imgElement.style.maxHeight = '300px'; // Prevent overly tall images
+        imgElement.style.display = 'block'; // Ensure it's on its own line
+        imgElement.style.borderRadius = 'var(--border-radius-standard)'; // Consistent rounding
+        imgElement.style.marginBottom = text ? '10px' : '0'; // Space if text follows, no margin if only image
+        imgElement.onerror = () => { // Handle broken image links
+            imgElement.alt = 'Image failed to load';
+            imgElement.style.display = 'none'; // Hide broken image icon perhaps
+            // Or show a placeholder/text error
+            const errorText = document.createElement('p');
+            errorText.textContent = '[Image URL failed to load]';
+            errorText.style.color = 'var(--text-secondary)';
+            contentDiv.prepend(errorText); // Prepend error text
+        };
+        contentDiv.appendChild(imgElement); // Add image first
+    }
+
+    if (text) { // Only add text if text is provided
+        if (type === 'ai') {
+            contentDiv.innerHTML += DOMPurify.sanitize(marked.parse(text)); // Use += if image was added
+        } else {
+            const textNode = document.createElement('div'); // Wrap user text for styling if needed
+            textNode.textContent = text;
+            contentDiv.appendChild(textNode);
+        }
+    } else if (type === 'ai' && !text) { // Handle empty AI message (e.g. "Thinking...")
+         contentDiv.innerHTML = DOMPurify.sanitize(marked.parse("...")); // Default for empty AI
+    }
+
+
+    bubble.appendChild(contentDiv);
+    chatLog.appendChild(bubble);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return bubble;
+}
+
+async function submitPrompt() {
+    const userPrompt = promptInput.value.trim();
+    const imageUrl = imageUrlPrompt.value.trim(); // Get the image URL
+
+    // Require a text prompt, image URL is optional
+    if (!userPrompt && !imageUrl) return; // Exit if both text and image URL are empty
+
+    const emptyState = document.getElementById('empty-state');
+    if (emptyState) emptyState.remove();
+
+    // For adding the user bubble, we'll address displaying the image in the next step.
+    // For now, the user bubble will just contain the text prompt.
+    addBubble(userPrompt, 'user', imageUrl); // Pass imageUrl, addBubble handles if userPrompt is empty
+
+    promptInput.value = '';
+    promptInput.style.height = 'auto';
+    promptInput.dispatchEvent(new Event('input')); // Trigger input event to reset submitBtn correctly
+    submitBtn.classList.remove('active');
+
+    // --- New code for clearing and hiding image URL input ---
+    if (imageUrlPrompt.style.display !== 'none') {
+        imageUrlPrompt.value = '';
+        imageUrlPrompt.style.display = 'none';
+        toggleImageUrlBtn.classList.remove('active');
+    }
+    // --- End of new code ---
+
+    const aiBubbleElement = addBubble("Thinking...", 'ai');
+    const aiBubbleContentDiv = aiBubbleElement.querySelector('.message-content');
+    let fullResponse = "";
+
+    try {
+        const selectedModel = modelSelector.value;
+        let responseStream;
+
+        if (imageUrl) {
+            console.log("Submitting prompt with text and image URL:", userPrompt, imageUrl);
+            // Ensure the options object is the third argument if imageUrl is present
+            responseStream = await puter.ai.chat(userPrompt, imageUrl, { stream: true, model: selectedModel });
+        } else {
+            console.log("Submitting prompt with text only:", userPrompt);
+            responseStream = await puter.ai.chat(userPrompt, { stream: true, model: selectedModel });
         }
 
-        async function submitPrompt() {
-            const userPrompt = promptInput.value.trim();
-            if (!userPrompt) return;
+        if (aiBubbleContentDiv) aiBubbleContentDiv.innerHTML = '';
 
-            const emptyState = document.getElementById('empty-state');
-            if (emptyState) emptyState.remove();
-
-            addBubble(userPrompt, 'user');
-            promptInput.value = ''; promptInput.style.height = 'auto'; submitBtn.classList.remove('active');
-
-            const aiBubble = addBubble("Thinking...", 'ai');
-            const contentContainer = aiBubble.querySelector('.message-content');
-            let fullResponse = "";
-
-            try {
-                const selectedModel = modelSelector.value;
-                const responseStream = await puter.ai.chat(userPrompt, { stream: true, model: selectedModel });
-                contentContainer.textContent = ''; // Clear "Thinking..."
-                for await (const part of responseStream) {
-                    const chunk = part?.text || ''; 
-                    fullResponse += chunk;
-                    contentContainer.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                }
-            } catch (error) {
-                console.error("Chat API Error:", error); // More specific console log
-                const errorMessage = formatUserFriendlyErrorMessage(error, "chat request");
-
-                // Ensure contentContainer is the actual div for the AI's message content
-                // The variable 'contentContainer' was defined as: const contentContainer = aiBubble.querySelector('.message-content');
-                // So, this should correctly target the content part of the bubble.
-                if (contentContainer) {
-                    contentContainer.innerHTML = DOMPurify.sanitize(marked.parse(errorMessage)); // Reuse sanitization and markdown parsing for consistency
-                } else {
-                    // Fallback if contentContainer is somehow not found (should not happen with current code)
-                    addBubble(errorMessage, 'ai');
-                }
+        for await (const part of responseStream) {
+            const chunk = part?.text || '';
+            fullResponse += chunk;
+            if (aiBubbleContentDiv) {
+                aiBubbleContentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
             }
         }
+        chatLog.scrollTop = chatLog.scrollHeight;
+    } catch (error) {
+        console.error("Chat API Error (submitPrompt):", error); // More specific console log
+        const errorMessage = formatUserFriendlyErrorMessage(error, imageUrl ? "chat with image request" : "chat request");
+        if (aiBubbleContentDiv) {
+            aiBubbleContentDiv.innerHTML = DOMPurify.sanitize(marked.parse(errorMessage));
+        } else {
+            addBubble(errorMessage, 'ai');
+        }
+    }
+}
 
         async function updateUserStatus() {
             if (puter.auth.isSignedIn()) {
@@ -788,6 +904,12 @@
         promptInput.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); submitPrompt(); } });
         submitBtn.addEventListener('click', submitPrompt);
         imageGenerateBtn.addEventListener('click', handleImagePrompt);
+
+        toggleImageUrlBtn.addEventListener('click', () => {
+            const isVisible = imageUrlPrompt.style.display !== 'none';
+            imageUrlPrompt.style.display = isVisible ? 'none' : 'block';
+            toggleImageUrlBtn.classList.toggle('active', !isVisible);
+        });
 
         // --- Initial Load ---
         (async () => {
